@@ -487,7 +487,7 @@ def connect(alias, port=None):
 def proxify(addr, port):
   BUFSIZE=4096
   s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-  s.connect(("127.0.0.1", 22))
+  s.connect((addr, port))
   while True:
     read_ready, write_ready, in_error = \
                 select.select( [sys.stdin, s], [], [sys.stdin, s] )
