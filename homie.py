@@ -18,7 +18,7 @@ Avaliable commands:
   connect <alias> [<port>] - connects to a host
   daemonize - start proxy service (not implemented)
   exorcise - stop proxy service (not implemented)
-  export <alias> - export host (try export localhost)
+  export <alias> - export host (try export localhost[:port])
   get <option> - get value for option (try help set)
   help - shows this help text
   import <alias> - import host not bound to a network
@@ -387,6 +387,16 @@ def list_host(alias, show_keys=False):
       print "key: %s" % key
 
 def export_host(alias, stream=sys.stdout):
+  if alias.lower().split(':')[0] == 'localhost' \
+    or alias.lower().split(':')[0] == 'localhost.homie':
+    if alias.find(':') > -1:
+      port = int(alias.split(':')[1])
+      export_localhost(stream, port=port)
+    else:
+      export_localhost(stream)
+    return
+
+  alias = sanitize_alias(alias)
   host = get_host(alias)
   print >> stream, "# %s" % host.alias
   if host.last_known_ip:
@@ -398,6 +408,17 @@ def export_host(alias, stream=sys.stdout):
     print >> stream, "#@port %s" % host.port
   print >> stream, "%s.homie %s" % ( host.alias,
                    (host.alias+'.homie ').join(host.keys.split('\n')) )
+
+def export_localhost(alias, stream=sys.stdout, port=22):
+  keys = ssh_keyscan('127.0.0.1',port=port)
+  if not keys:
+    raise Exception('No ssh server running on localhost:%d' % port)
+  alias = socket.gethostname()
+  print >> stream, "# %s" % alias
+  if port != 22:
+    print >> stream, "#@port %s" % port
+  for key in keys:
+    print >> stream, "%s.homie %s %s" % (alias, key[-2], key[-1])
 
 def import_host(alias, stream=sys.stdin):
   alias = sanitize_alias(alias)
