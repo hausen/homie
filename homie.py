@@ -510,8 +510,11 @@ def proxify(addr, port):
   s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
   s.connect((addr, port))
   while True:
-    read_ready, write_ready, in_error = \
-                select.select( [sys.stdin, s], [], [sys.stdin, s] )
+    try:
+      read_ready, write_ready, in_error = \
+                  select.select( [sys.stdin, s], [], [sys.stdin, s] )
+    except KeyboardInterrupt:
+      exit(0)
     if s in in_error or sys.stdin in in_error:
       exit(1)
     if s in read_ready:
