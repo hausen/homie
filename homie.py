@@ -1,9 +1,8 @@
 #!/usr/bin/python
-import atexit, fcntl, os, re, socket, sqlite3, struct, subprocess, sys, \
-       thread, time
+import atexit, fcntl, os, re, select, socket, sqlite3, struct, subprocess, \
+       sys, thread, time
 
 SSH_KEYSCAN = '/usr/bin/ssh-keyscan'
-NETCAT = '/bin/netcat'
 IFCONFIG = '/sbin/ifconfig'
 SSH_CONFIG_DIR = os.path.expanduser("~") + "/.ssh"
 KNOWN_HOSTS_DIR = SSH_CONFIG_DIR
@@ -482,8 +481,33 @@ def connect(alias, port=None):
     addr = host.ipaddr
     if not port:
       port = host.port
-  cmd = [ NETCAT, addr, str(port) ]
   dbdisconnect()
+  proxify(addr, port)
+
+def proxify(addr, port):
+  BUFSIZE=4096
+  s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+  s.connect(("127.0.0.1", 22))
+  while True:
+    read_ready, write_ready, in_error = \
+                select.select( [sys.stdin, s], [], [sys.stdin, s] )
+    if s in in_error or sys.stdin in in_error:
+      exit(1)
+    if s in read_ready:
+      data = s.recv(BUFSIZE)
+      if len(data) == 0:
+        exit(0)
+      sys.stdout.write(data)
+      sys.stdout.flush()
+    if sys.stdin in read_ready:
+      data = os.read(sys.stdin.fileno(), BUFSIZE)
+      if len(data) == 0:
+        exit(0)
+      s.send(data)   
+
+def proxify_with_netcat(addr, port):
+  NETCAT = '/bin/netcat'
+  cmd = [ NETCAT, addr, str(port) ]
   os.execv(cmd[0], cmd)
 
 def is_valid_alias(alias):
