@@ -407,7 +407,7 @@ def export_host(alias, stream=sys.stdout):
   if host.port != 22:
     print >> stream, "#@port %s" % host.port
   print >> stream, "%s.homie %s" % ( host.alias,
-                   (host.alias+'.homie ').join(host.keys.split('\n')) )
+                   ('\n'+host.alias+'.homie ').join(host.keys.split('\n')) )
 
 def export_localhost(alias, stream=sys.stdout, port=22):
   keys = ssh_keyscan('127.0.0.1',port=port)
