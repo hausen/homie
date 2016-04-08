@@ -22,6 +22,7 @@ Avaliable commands:
   get <option> - get value for option (try help set)
   help - shows this help text
   import <alias> - import host not bound to a network
+  ipaddr <alias> - shows ip address
   remove <alias> - forget host
   set <option> <value> - set option (try help set)
   show [<alias>] - show host info
@@ -487,6 +488,12 @@ def remove_host(alias):
                  ( SELECT * FROM host WHERE host.keyid = key.keyid )''')
   dbcommit()
 
+def show_ipaddr(alias):
+  alias = sanitize_alias(alias)
+  host = get_host(alias)
+  update_host_ipaddr(host)
+  print host.ipaddr
+
 def connect(alias, port=None):
   alias = sanitize_alias(alias)
   addr = None
@@ -610,6 +617,8 @@ try:
     help_command(sys.argv[2].lower())
   elif cmd == 'import' and len(sys.argv) == 3:
     import_host(sys.argv[2])
+  elif cmd == 'ipaddr' and len(sys.argv) == 3:
+    show_ipaddr(sys.argv[2])
   elif cmd == 'remove' and len(sys.argv) == 3:
     remove_host(alias=sys.argv[2])
   elif cmd == 'set' and len(sys.argv) == 4:
