@@ -213,7 +213,8 @@ def ssh_keyscan(network, netmask='255.255.255.255', port=None):
   hosts_to_go = 2 ** netmaskbits(netmask)
   if hosts_to_go >= 2: hosts_to_go -= 1 # skip broadcast address
   if not port: port = addrgetport(network)
-  p = subprocess.Popen([SSH_KEYSCAN, '-f', '-', '-p', str(port) ],
+  p = subprocess.Popen([SSH_KEYSCAN, '-t', 'rsa,ecdsa,ed25519',
+                       '-f', '-', '-p', str(port) ],
                        stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                        stderr=open(os.devnull, 'w'))
   while hosts_to_go > 0:
